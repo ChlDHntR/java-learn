@@ -43,14 +43,19 @@ public class Main {
 
         System.out.println(max(numList));
 
+        benchmarkTest test = new benchmarkTest();
+        test.runBenchMark();
+
     }
 
     static <T extends Comparable<T>> T max(List<T> list) {
         T max = list.getFirst();
         ListIterator<T> lit = list.listIterator();
+        T nextNode;
 
         while (lit.hasNext()) {
-            max = lit.next().compareTo(max) > 0 ? lit.next() : max;
+            nextNode = lit.next();
+            max = nextNode.compareTo(max) > 0 ? nextNode : max;
         }
 
         return max;
