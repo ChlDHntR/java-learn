@@ -4,50 +4,53 @@ import java.util.HashMap;
 import java.util.Objects;
 
 public class UserRepository {
-    private final HashMap<Integer,User> store = new HashMap<>();
+    private final HashMap<String,User> store = new HashMap<>();
 
     //key by name instead
     public void create(String name, int age) throws DupUserException {
-        User newUser = new User(name, age);
-        int hashed = newUser.hashCode();
-        User findUser = store.get(hashed);
+        User findUser = store.get(name);
 
         if (findUser != null) {
             throw new DupUserException("User already exist");
         }
-        store.put(hashed, newUser);
+        User newUser = new User(name, age);
+        store.put(name, newUser);
     }
 
-    public User findByNameAndAge(String name, int age) throws User404Exception {
-        User user = store.get(name.hashCode());
+    public User findByName(String name) throws User404Exception {
+        User user = store.get(name);
         if (user != null) {
             return user;
+        } else {
+            throw new User404Exception("No user found with name " + name);
         }
-        throw new User404Exception("No user found with name " + name);
     }
 
     public void update(String name, String newName, int newAge) throws User404Exception {
-        User user = store.get(name.hashCode());
+        User user = store.get(name);
         if (user != null) {
             User updatedUser = new User(newName, newAge);
-            store.put(name.hashCode(), updatedUser);
+            store.remove(name);
+            store.put(newName, updatedUser);
+        } else {
+            throw new User404Exception("No user found with name " + name);
         }
-        throw new User404Exception("No user found with name " + name);
     }
 
     public void delete(String name) throws User404Exception {
-        User user = store.get(name.hashCode());
+        User user = store.get(name);
         if (user != null) {
-            store.remove(name.hashCode());
+            store.remove(name);
+        } else {
+            throw new User404Exception("No user found with name " + name);
         }
-        throw new User404Exception("No user found with name " + name);
     }
 
 }
 
 class User {
-    private String name;
-    private int age;
+    private final String name;
+    private final int age;
 
     @Override
     public boolean equals(Object object) {
@@ -61,7 +64,7 @@ class User {
 
         User user = (User) object;
 
-        if (user.getName() == this.name && user.getAge() == this.age) {
+        if ((user.getName().equals(this.name)) && (user.getAge() == this.age)) {
             return true;
         }
         return false;
