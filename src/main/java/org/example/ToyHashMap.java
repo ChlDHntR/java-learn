@@ -57,18 +57,19 @@ class HashMap<K,V> {
         return hashed;
     }
 
-    public void put(K key,V value) {
-        if (store[Hash(key)] != null) {
-
-        }
-    }
-
-    public V get(K key) {
-    }
-
-    public void resize() {
-
-    }
+//    public void put(K key,V value) {
+//        if (store[Hash(key)] != null) {
+//
+//        }
+//    }
+//
+//    public V get(K key) {
+//        return this.store;
+//    }
+//
+//    public void resize() {
+//
+//    }
 
 
 }

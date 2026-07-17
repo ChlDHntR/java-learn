@@ -99,7 +99,7 @@
 **Learn:** Lambdas, method references, `Function/Predicate/Consumer/Supplier`.
 
 **Steps:**
-1. [ ] Find/write 10 anonymous-class usages and convert each to a lambda.
+1. [ ] Find/write 4 anonymous-class usages and convert each to a lambda.
 2. [ ] Compose functions: build `f.andThen(g)` and `f.compose(g)`, and confirm order differs.
 3. [ ] Combine predicates: `p1.and(p2).or(p3).negate()`.
 4. [ ] Use all 4 method-reference kinds: static (`Integer::parseInt`), bound instance (`str::length`), unbound instance (`String::length`), constructor (`ArrayList::new`).
