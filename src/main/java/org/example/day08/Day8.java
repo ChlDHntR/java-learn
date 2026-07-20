@@ -43,4 +43,28 @@ public class Day8 {
     public Function<Integer, Integer> andThenTest = squareIntLambda.andThen(plus1);
     public Function<Integer, Integer> composeTest = squareIntLambda.compose(plus1);
 
+    //Predicate chaining
+    public record Member(String name, int age, int level, boolean isGay) {}
+
+    public Member user1 = new Member("John", 21, 1, true);
+    public Member user2 = new Member("Tom", 45, 4, false);
+    public Member user3 = new Member("Jane", 22, 2, true);
+    public Member user4 = new Member("Mark", 30, 2, false);
+    public Member user5 = new Member("Julie", 29, 2, false);
+    public Member user6 = new Member("Chris", 19, 0, false);
+
+    Predicate<Integer> isSenior =  level -> level >= 3;
+    public static Predicate<Integer> isOld = age -> age >= 30;
+    Predicate<Boolean> isGay = bool -> bool;
+    Predicate <Integer> isNotTooOld = age -> age <= 40;
+    Predicate<Integer> isYoungSenior = isSenior.and(isNotTooOld);
+
+    public void runCombPred(Member user) {
+        System.out.println(isYoungSenior.test(user.age));
+    }
+
+    //Method ref
+    Function<String, Integer> getTextLength = String::length;
+
+
 }

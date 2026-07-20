@@ -1,6 +1,7 @@
 package org.example;
 
 import org.example.day08.Day8;
+import org.example.day09.Day09;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,8 +27,8 @@ public class Main {
         //Have fun!
 
         Day8 day8runner = new Day8();
-
-        System.out.println("combine andThen: " + day8runner.andThenTest.apply(5));
-        System.out.println("combine compose: " + day8runner.composeTest.apply(5));
+        day8runner.runCombPred(day8runner.user4);
+        Day09 day9runner = new Day09();
+        day9runner.main();
     }
 }

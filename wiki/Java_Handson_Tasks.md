@@ -110,21 +110,88 @@
 ### Day 9 · Tue · 2026-07-14 — Stream API I
 **Learn:** map/filter/collect/reduce; lazy vs eager.
 
+**Setup:** Create package `src/main/java/org/example/day09/`. Reuse the `Member` record from `Day8`. Build a `List<Member>` with 5–6 members at the top of your class using `List.of(...)`.
+
 **Steps:**
-1. [ ] Convert 5 `for` loops into streams (`map`/`filter`/`collect(toList())`).
-2. [ ] Prove laziness: insert `.peek(System.out::println)` and observe nothing prints until a terminal op runs.
-3. [ ] Use `reduce` for one aggregation (sum or string concat) and note the identity + accumulator.
-4. [ ] 🤖 **Ask AI:** "Where do streams hurt readability here?"
+
+1. [ ] **Convert 5 `for` loops into streams.**
+   For each loop: write the `for` version first, then rewrite it as a stream underneath so you can compare.
+
+   - *Loop 1* — filter members by minimum age → `List<Member>`
+     - Grammar: `stream.filter(Predicate<T>)`
+   - *Loop 2* — extract just the names → `List<String>`
+     - Grammar: `stream.map(Function<T, R>)`
+   - *Loop 3* — filter by level, then uppercase the name → `List<String>`
+     - Grammar: chain `.filter(...).map(...)`
+   - *Loop 4* — count members above a certain age → `long`
+     - Grammar: `stream.count()` (terminal op, returns `long`)
+   - *Loop 5* — join all names into one comma-separated string
+     - Grammar: `Collectors.joining(delimiter)`
+
+2. [ ] **Prove stream laziness with `.peek()`.**
+
+   `.peek(Consumer<T>)` is an intermediate op — place it before and after `.filter()` and after `.map()`. Print the member name at each stage.
+
+   - Run with a terminal op (`collect`) and observe the print order — does it print all "before filter" first, or does each element travel the whole pipeline before the next one enters?
+   - Then **remove the terminal op** entirely and run again — what prints?
+
+3. [ ] **Use `reduce` for aggregation.**
+
+   `reduce` collapses all elements into one value using an identity (starting value) and an accumulator function.
+
+   - Grammar: `stream.reduce(identity, BinaryOperator<T>)` → returns `T`
+   - Grammar: `stream.reduce(BinaryOperator<T>)` → returns `Optional<T>` (no identity → stream could be empty)
+
+   Try these three:
+   - Sum of all ages (use `.map()` to extract age first, then `reduce`)
+   - Concatenate all names into one string
+   - Find the oldest age — use the `Optional` form and think about why there's no identity here
+
+4. [ ] 🤖 **Ask AI:** "Where do my streams hurt readability here?"
 
 **Done:** 3/5 loops become clean streams; you can explain lazy vs eager.
 
 ### Day 10 · Wed · 2026-07-15 — Stream API II + Optional
 **Learn:** groupingBy/partitioningBy/downstream collectors + Optional.
 
+**Setup:** Create package `src/main/java/org/example/day10/`. Create a `Sale` record with fields: `region` (String), `product` (String), `amount` (double). Make a `List<Sale>` with at least 8 entries spread across 2–3 regions and 2–3 products.
+
 **Steps:**
-1. [ ] Build a sales report: `groupingBy(Sale::region, groupingBy(Sale::product, summingDouble(Sale::amount)))`.
-2. [ ] Use `partitioningBy` for one boolean split (e.g. above/below target).
-3. [ ] Refactor 5 null checks into `Optional` chains (`map`/`filter`/`orElseGet`) — never call `.get()` unguarded.
+
+1. [ ] **Build a nested sales report with `groupingBy`.**
+
+   Goal: produce a `Map<String, Map<String, Double>>` — region → product → total sales amount.
+
+   - Grammar: `Collectors.groupingBy(classifier, downstreamCollector)`
+   - Grammar: `Collectors.summingDouble(ToDoubleFunction<T>)`
+   - The outer `groupingBy` groups by region; the inner `groupingBy` groups by product; `summingDouble` sums the amounts.
+   - Print the result and verify each region/product combination is correct.
+
+2. [ ] **Use `partitioningBy` to split into two groups.**
+
+   Goal: split sales into above-target and below-target in one pass → `Map<Boolean, List<Sale>>`.
+
+   - Grammar: `Collectors.partitioningBy(Predicate<T>)` → always returns a map with exactly two keys: `true` and `false`
+   - Pick a target amount (e.g. 100.0) and partition on `sale.amount() > target`.
+   - Print both groups and confirm every sale is in exactly one group.
+
+3. [ ] **Refactor 5 null checks into `Optional` chains.**
+
+   Write a helper method that looks up a `Sale` by product name and returns `null` if not found. Then write 5 callers that use the result — each with a different scenario:
+   - Get the amount, or `0.0` if not found
+   - Get the region, uppercased, or `"UNKNOWN"`
+   - Filter to only return a value if the amount is above 50
+   - Chain two lookups (look up a sale, then look up something based on its region)
+   - Print the result only if present — no `if` statement allowed
+
+   - Grammar: `Optional.ofNullable(value)`
+   - Grammar: `optional.map(Function)` — transforms if present
+   - Grammar: `optional.filter(Predicate)` — keeps value only if condition holds
+   - Grammar: `optional.orElse(defaultValue)`
+   - Grammar: `optional.orElseGet(Supplier)` — lazy default (use when default is expensive)
+   - Grammar: `optional.ifPresent(Consumer)` — act only if present
+   - **Rule:** never call `optional.get()` without first calling `optional.isPresent()` — prefer the methods above instead.
+
 4. [ ] 🤖 **Ask AI:** "Where am I overusing Optional?"
 
 **Done:** groupingBy report runs; 5 null checks removed correctly.
@@ -132,11 +199,46 @@
 ### Day 11 · Thu · 2026-07-16 — Records, sealed, pattern matching
 **Learn:** Records + sealed classes + pattern matching (switch, record patterns).
 
+**Setup:** Create package `src/main/java/org/example/day11/`.
+
 **Steps:**
-1. [ ] Define `sealed interface Result<S, E> permits Success, Error` with `record Success<S>(S value)` and `record Error<E>(E error)`.
-2. [ ] Write an exhaustive `switch` over `Result` with **no** `default`; let the compiler enforce completeness.
-3. [ ] Use record patterns to destructure: `case Success(var v) -> ...`.
-4. [ ] Add a new permitted subtype and watch the switch fail to compile (exhaustiveness).
+
+1. [ ] **Define a sealed `Result` type.**
+
+   A `sealed interface` restricts which classes can implement it — the compiler knows the full set of subtypes.
+
+   - Grammar: `sealed interface Name<S, E> permits SubtypeA, SubtypeB {}`
+   - Grammar: `record SubtypeA<S>(S value) implements Name<S, ?> {}`
+   - Create `Result<S, E>` with two permitted subtypes: `Success<S>` (holds a value) and `Failure<E>` (holds an error).
+   - Both subtypes should be records.
+
+2. [ ] **Write an exhaustive switch — no `default`.**
+
+   Because the interface is sealed, the compiler knows every possible subtype. If you cover them all, no `default` is needed — and the compiler will enforce it.
+
+   - Grammar (switch expression):
+     ```
+     switch (result) {
+         case Success<?,?> s -> ...
+         case Failure<?,?> f -> ...
+     }
+     ```
+   - Write a method that takes a `Result<String, String>` and returns a descriptive string for each case.
+   - Confirm it compiles with no `default`.
+
+3. [ ] **Use record patterns to destructure inside the switch.**
+
+   Instead of getting the value via a method call after the match, destructure it inline.
+
+   - Grammar: `case Success(var v) -> ...` — `v` is bound directly to the record component
+   - Update your switch to extract the inner value using a record pattern instead of calling `.value()` after matching.
+
+4. [ ] **Add a new permitted subtype and watch the compiler fail.**
+
+   - Add a third subtype to `permits` (e.g. `Loading`) but do **not** add it to your switch.
+   - Try to compile — read the error. This is exhaustiveness enforcement in action.
+   - Then add the missing case to fix it.
+
 5. [ ] 🤖 **Ask AI:** "Quiz me on switch exhaustiveness."
 
 **Done:** `Result<S,E>` via sealed + exhaustive switch.
@@ -144,11 +246,49 @@
 ### Day 12 · Fri · 2026-07-17 — NIO.2, text blocks, var
 **Learn:** NIO.2 (Path/Files/Files.lines) + text blocks + var.
 
+**Setup:** Create package `src/main/java/org/example/day12/`. Create a small `members.csv` file under `src/main/resources/` with columns: `name,age,level` — at least 5 rows.
+
 **Steps:**
-1. [ ] Write a CSV/log reader using `Files.lines(path)` inside try-with-resources (the stream must be closed).
-2. [ ] Parse each line into a record; collect to a list.
-3. [ ] Use a text block (`"""..."""`) for a multi-line report template.
-4. [ ] Use `var` for obvious local types; note where it hurts readability.
+
+1. [ ] **Read the CSV file using `Files.lines()` inside try-with-resources.**
+
+   `Files.lines()` returns a `Stream<String>` — and streams that wrap I/O **must be closed** or the file handle leaks. The safe way is `try-with-resources`.
+
+   - Grammar: `Path path = Path.of("...")` or `Paths.get("...")`
+   - Grammar: `try (Stream<String> lines = Files.lines(path)) { ... }`
+   - Skip the header line — Grammar: `stream.skip(1)`
+   - Collect the remaining lines to a `List<String>` for now.
+
+2. [ ] **Parse each line into a record.**
+
+   Create a `MemberCsv` record with fields matching your CSV columns. Write a static factory method on the record that takes a raw CSV line (String) and returns a `MemberCsv`.
+
+   - Grammar: `line.split(delimiter)` → `String[]`
+   - Grammar: `Integer.parseInt(str)`
+   - Chain this into the stream from step 1: `.map(MemberCsv::fromLine).collect(toList())`
+   - Print each record to verify.
+
+3. [ ] **Build a report string using a text block.**
+
+   A text block is a multi-line string literal — no `+` concatenation needed.
+
+   - Grammar:
+     ```
+     String template = """
+             Name: %s
+             Age:  %d
+             """.formatted(name, age);
+     ```
+   - Use `String.formatted(...)` to fill in values from one of your parsed records.
+   - Print the result and check the indentation looks clean.
+
+4. [ ] **Use `var` for local variable type inference.**
+
+   `var` tells the compiler to infer the type — it is NOT dynamic typing, the type is still fixed at compile time.
+
+   - Replace 3–4 local variable declarations with `var` where the type is obvious from the right-hand side (e.g. `var list = new ArrayList<String>()`)
+   - Find at least one place where `var` hurts readability (e.g. when the return type of a method isn't obvious from its name) — leave those as explicit types and add a comment explaining why.
+
 5. [ ] 🤖 **Ask AI:** "Find the resource leak in my file-reading code."
 
 **Done:** `Files.lines` reader leaks nothing.
@@ -156,11 +296,46 @@
 ### Day 13 · Sat · 2026-07-18 — Build & packaging
 **Learn:** Maven vs Gradle, dependency scopes, runnable (fat) JAR.
 
+**Setup:** No new package needed — this day is about your `pom.xml` and the Maven build itself.
+
 **Steps:**
-1. [ ] Add `maven-shade-plugin` (or `maven-assembly-plugin`) and set the `Main-Class` manifest entry.
-2. [ ] Run `mvn clean package`, then `java -jar target/<app>.jar` — it must run.
-3. [ ] Write down the meaning of scopes: `compile`, `provided`, `runtime`, `test`.
-4. [ ] List the default Maven lifecycle phases (validate → compile → test → package → verify → install → deploy).
+
+1. [ ] **Understand dependency scopes.**
+
+   Before touching the JAR, open `pom.xml` and look at your existing dependencies. Write down (in a comment or notebook) what each scope means:
+
+   | Scope | Available at compile? | Available at runtime? | Included in JAR? |
+   |---|---|---|---|
+   | `compile` (default) | | | |
+   | `provided` | | | |
+   | `runtime` | | | |
+   | `test` | | | |
+
+   Fill in the table from memory first, then verify with the Maven docs or AI.
+
+2. [ ] **Add the `maven-shade-plugin` to create a fat JAR.**
+
+   A fat JAR bundles your code **and all its dependencies** into one `.jar` so it can run with `java -jar` without a classpath.
+
+   - In `pom.xml`, add the plugin inside `<build><plugins>`.
+   - Configure it with a `<transformer>` of type `ManifestResourcesTransformer` and set `<mainClass>` to your main class fully qualified name (e.g. `org.example.Main`).
+   - You do not need to memorise the XML — look it up in the Maven Shade Plugin docs. Focus on understanding **what each tag does**.
+
+3. [ ] **Build and run the fat JAR.**
+
+   - Run: `mvn clean package`
+   - Look inside `target/` — you should see two JARs. Which one is the fat JAR? How can you tell?
+   - Run: `java -jar target/<your-fat-jar>.jar`
+   - It must print output without any `ClassNotFoundException`.
+
+4. [ ] **Map the Maven default lifecycle phases.**
+
+   Write the 8 phases in order from memory, then verify:
+   `validate → compile → test → package → verify → install → deploy`
+
+   For each phase, write one sentence: what does Maven do at this phase?
+   Think about: where does `mvn clean package` stop? What does `install` add on top of `package`?
+
 5. [ ] 🤖 **Ask AI:** "What does the Maven lifecycle consist of?"
 
 **Done:** Fat JAR runs via `java -jar`; you can name 8 Maven phases.
