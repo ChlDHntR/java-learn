@@ -1,5 +1,6 @@
 package org.example;
 
+import org.example.Day10.Day10;
 import org.example.day08.Day8;
 import org.example.day09.Day09;
 
@@ -26,9 +27,7 @@ public class Main {
         //Learning starts from here!
         //Have fun!
 
-        Day8 day8runner = new Day8();
-        day8runner.runCombPred(day8runner.user4);
-        Day09 day9runner = new Day09();
-        day9runner.main();
+        Day10 day10runner = new Day10();
+        day10runner.getMap();
     }
 }

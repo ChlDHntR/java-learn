@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.summingInt;
+
 public class Day10 {
     public record Product(String name, int price) {}
     public record Region(String name) {}
@@ -24,11 +26,16 @@ public class Day10 {
     Sale sale5 = new Sale(cologne, bike, 40);
     Sale sale6 = new Sale(cologne, car, 10);
     Sale sale7 = new Sale(cologne, boat, 10);
+    Sale sale8 = new Sale(paris, car, 30);
+    Sale sale9 = new Sale(london, boat, 5);
+    Sale sale10 = new Sale(cologne, bike, 20);
 
-    List<Sale> saleRecord = List.of(sale1, sale2, sale3, sale4, sale5, sale6, sale7);
+    List<Sale> saleRecord = List.of(sale1, sale2, sale3, sale4, sale5, sale6, sale7, sale8, sale9, sale10);
 
-    Map<Region, Map<Product, Sale>> RegionProductSale = saleRecord.stream()
-            .collect(Collectors.groupingBy(Sale sale -> sale.region(), Collectors.groupingBy() ));
-
+    Map<Region, Map<Product, Integer>> RegionProductSale = saleRecord.stream()
+            .collect(Collectors.groupingBy(sale -> sale.region() , Collectors.groupingBy(Sale::product, summingInt(Sale::amount)) ));
+    public void getMap() {
+        System.out.println(RegionProductSale);
+    }
 
 }
