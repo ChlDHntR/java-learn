@@ -1,6 +1,7 @@
 package org.example;
 
 import org.example.Day10.Day10;
+import org.example.Day11.Day11;
 import org.example.day08.Day8;
 import org.example.day09.Day09;
 
